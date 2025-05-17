@@ -1,3 +1,4 @@
+gdown==5.2.0
 joblib==1.5.0
 pandas==2.2.3
 protobuf==6.31.0

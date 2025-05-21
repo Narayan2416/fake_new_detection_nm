@@ -32,19 +32,30 @@ class FakeNewsLSTM(nn.Module):
         out = self.dropout(lstm_out[:, -1, :])
         return torch.sigmoid(self.fc(out))
 
-# === Load tokenizer and label encoder ===
+# === Cache resource functions ===
+@st.cache_resource
+def load_tokenizer():
+    return BertTokenizer.from_pretrained(TOKENIZER_FOLDER)
+
+@st.cache_resource
+def load_model():
+    model = FakeNewsLSTM(30522, 64, 1).to(device)
+    model.load_state_dict(torch.load("LSTM.pth", map_location=device))
+    model.eval()
+    return model
+
+@st.cache_resource
+def load_label_encoder():
+    return joblib.load("label_encoder_LSTM.joblib")
+
+# === Load cached resources ===
 try:
-    tokenizer = BertTokenizer.from_pretrained(TOKENIZER_FOLDER)
+    tokenizer = load_tokenizer()
+    model = load_model()
+    label_encoder = load_label_encoder()
 except Exception as e:
-    st.error(f"Tokenizer loading failed: {e}")
+    st.error(f"Error loading resources: {e}")
     st.stop()
-
-label_encoder = joblib.load("label_encoder_LSTM.joblib")
-
-# === Load model ===
-model = FakeNewsLSTM(30522, 64, 1).to(device)
-model.load_state_dict(torch.load("LSTM.pth", map_location=device))
-model.eval()
 
 # === Streamlit UI Config ===
 st.set_page_config(page_title="Fake News Detector", page_icon="📰")
@@ -97,9 +108,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
-
-
 # === App Layout ===
 st.title("📰 Fake News Detection App")
 st.markdown("Enter a news sentence or paragraph to classify whether it's **Fake** or **Real**.")
@@ -133,4 +141,3 @@ if st.button("🔍 Predict"):
             st.markdown(f"<div class='fake'>🚨 Prediction: FAKE NEWS!!</div>", unsafe_allow_html=True)
         else:
             st.markdown(f"<div class='real'>✅ Prediction: REAL NEWS ✔️</div>", unsafe_allow_html=True)
-

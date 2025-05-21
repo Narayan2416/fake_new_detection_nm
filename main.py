@@ -6,6 +6,9 @@ import zipfile
 import os
 from transformers import BertTokenizer
 
+# === Streamlit UI Config ===
+st.set_page_config(page_title="Fake News Detector", page_icon="📰")
+
 # === Set device ===
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -56,9 +59,6 @@ try:
 except Exception as e:
     st.error(f"Error loading resources: {e}")
     st.stop()
-
-# === Streamlit UI Config ===
-st.set_page_config(page_title="Fake News Detector", page_icon="📰")
 
 # === Custom CSS ===
 st.markdown("""

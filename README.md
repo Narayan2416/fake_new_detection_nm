@@ -28,7 +28,6 @@ Try out the live app here:
 ---
 
 
----
 
 ## 🛠 Installation
 

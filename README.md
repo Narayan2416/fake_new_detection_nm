@@ -18,6 +18,15 @@ This repository hosts a powerful **Fake News Detection** app designed to classif
 - **Real-Time Prediction**  
   Instantly classify news headlines or articles.
 
+---
+
+## 🌐 Live Demo
+
+Try out the live app here:  
+👉 [Fake News Detection Live](https://fake-news-detection-v-0-3.onrender.com) 👈
+
+---
+
 
 ---
 

@@ -4,7 +4,9 @@ import torch.nn as nn
 import joblib
 import zipfile
 import os
+import requests
 from transformers import BertTokenizer, BertModel
+
 
 # === Streamlit UI Config ===
 st.set_page_config(page_title="Fake News Detector", page_icon="\U0001F4F0")
@@ -44,10 +46,22 @@ def load_tokenizer():
 
 @st.cache_resource
 def load_model():
+    # Download model weights from Hugging Face repo
+    url = "https://huggingface.co/nanostar2416/fake_news_lstm/resolve/main/final_fakenews_model_weights.pth"
+    model_path = "final_fakenews_model_weights.pth"
+
+    if not os.path.exists(model_path):
+        with open(model_path, "wb") as f:
+            f.write(requests.get(url).content)
+
+    # Initialize your model architecture
     model = FakeNewsLSTM(hidden_dim=64, output_dim=1).to(device)
-    model.load_state_dict(torch.load("final_fakenews_model_weights.pth", map_location=device))
+
+    # Load weights
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     return model
+
 
 # === Load ===
 try:

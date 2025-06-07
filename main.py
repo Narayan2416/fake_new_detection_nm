@@ -1,27 +1,15 @@
 import streamlit as st
 import torch
 import torch.nn as nn
-import joblib
-import zipfile
 import os
 import requests
 from transformers import BertTokenizer, BertModel
-
 
 # === Streamlit UI Config ===
 st.set_page_config(page_title="Fake News Detector", page_icon="\U0001F4F0")
 
 # === Set device ===
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# === Extract tokenizer.zip contents ===
-TOKENIZER_ZIP = "tokenizer.zip"
-TOKENIZER_FOLDER = "tokenizer_dir/tokenizer_dir"
-
-
-if not os.path.exists(TOKENIZER_FOLDER):
-    with zipfile.ZipFile(TOKENIZER_ZIP, 'r') as zip_ref:
-        zip_ref.extractall(TOKENIZER_FOLDER)
 
 # === Define LSTM model ===
 class FakeNewsLSTM(nn.Module):
@@ -42,11 +30,10 @@ class FakeNewsLSTM(nn.Module):
 # === Load Resources ===
 @st.cache_resource
 def load_tokenizer():
-    return BertTokenizer.from_pretrained(TOKENIZER_FOLDER)
+    return BertTokenizer.from_pretrained('bert-base-uncased')
 
 @st.cache_resource
 def load_model():
-    # Download model weights from Hugging Face repo
     url = "https://huggingface.co/nanostar2416/fake_news_lstm/resolve/main/final_fakenews_model_weights.pth"
     model_path = "final_fakenews_model_weights.pth"
 
@@ -54,19 +41,16 @@ def load_model():
         with open(model_path, "wb") as f:
             f.write(requests.get(url).content)
 
-    # Initialize your model architecture
     model = FakeNewsLSTM(hidden_dim=64, output_dim=1).to(device)
-
-    # Load weights
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     return model
 
-
 # === Load ===
 try:
-    tokenizer = load_tokenizer()
-    model = load_model()
+    with st.spinner("Loading model..."):
+        tokenizer = load_tokenizer()
+        model = load_model()
 except Exception as e:
     st.error(f"Error loading resources: {e}")
     st.stop()
@@ -123,7 +107,7 @@ if st.button("\U0001F50D Predict"):
             return_tensors='pt',
             truncation=True,
             padding='max_length',
-            max_length=5
+            max_length=200  # match training
         )
         input_ids = inputs['input_ids'].to(device)
         attention_mask = inputs['attention_mask'].to(device)
